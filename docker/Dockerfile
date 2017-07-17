@@ -1,31 +1,10 @@
 FROM python:3.6
 
-LABEL maintainer="renault@karudev.fr"
+LABEL maintainer="d.renault@karudev-informatique.fr"
 
 # Install Ubuntu packages
 RUN apt-get update
-RUN apt-get install alien dpkg-dev debhelper build-essential libaio1 --assume-yes
-
-# Install VIM
-RUN apt-get install libncurses5-dev libgnome2-dev libgnomeui-dev \
-    libgtk2.0-dev libatk1.0-dev libbonoboui2-dev \
-    libcairo2-dev libx11-dev libxpm-dev libxt-dev python-dev \
-    python3-dev ruby-dev lua5.1 lua5.1-dev libperl-dev git -y
-
-RUN cd ~ && git clone https://github.com/vim/vim.git
-RUN cd ~/vim && ./configure --with-features=huge \
-            --enable-multibyte \
-            --enable-rubyinterp=yes \
-            --enable-pythoninterp=yes \
-            --with-python-config-dir=/usr/lib/python2.7/config \
-            --enable-python3interp=yes \
-            --with-python3-config-dir=/usr/lib/python3.4/config-3.4m-x86_64-linux-gnu \
-            --enable-perlinterp=yes \
-            --enable-luainterp=yes \
-            --enable-gui=gtk2 --enable-cscope --prefix=/usr \
-    make VIMRUNTIMEDIR=/usr/share/vim/vim80
-RUN cd ~/vim && make install
-
+RUN apt-get install alien dpkg-dev debhelper build-essential libaio1 vim-nox --assume-yes
 
 # Install Oracle
 ADD oracle-instantclient12.1-basic-12.1.0.2.0-1.x86_64.rpm .
@@ -47,4 +26,14 @@ RUN ldconfig
 ADD requirements.txt /code/
 WORKDIR /code
 RUN pip install -r requirements.txt
+
+USER root
+
+# Install Vim with autocomplete
+RUN mkdir -p /root/.vim/autoload /root/.vim/bundle && \
+    curl -LSso /root/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
+RUN git clone --recursive https://github.com/davidhalter/jedi-vim.git /root/.vim/bundle/jedi-vim
+ADD vimrc /root/.vimrc
+#RUN git clone https://github.com/Valloric/YouCompleteMe.git /root/.vim/bundle/YouCompleteMe
+#RUN cd /root/.vim/bundle/YouCompleteMe && git submodule update --init --recursive && ./install.py
 
